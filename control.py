@@ -1,5 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import astan
+
+BOTS = 2
 
 x_curr=[[-50],[50]]
 y_curr=[[40],[-40]]
@@ -8,6 +11,7 @@ inti = np.zeros((2,2))
 di = np.zeros((2,2))
 
 t=3.5
+
 r=8/t
 
 g=[[50,-40],[-50,40]]
@@ -17,7 +21,7 @@ ki=1e-5
 kd=0.001
 kp=.1
 
-error = [np.subtract(g[0],[x_curr[0],y_curr[0]]), np.subtract(g[1],[x_curr[1],y_curr[1]])]
+error = [np.subtract(g[0],x_curr[0]+y_curr[0]), np.subtract(g[1], x_curr[1]+y_curr[1])]
 
 # ********************* checking the valuse by plotting them
 '''
@@ -34,38 +38,43 @@ v_opt= [np.add(np.add(np.multiply(kp,error[0]), np.multiply(kd,di[0])), np.multi
 v_opt = np.array(v_opt)
 v_pref = np.array(v_opt)
 
-x_curr=np.add(np.multiply(v_opt[:,0], t), x_curr)
-y_curr=np.add(np.multiply(v_opt[:,1], t) + y_curr)
+x_curr=np.add(np.multiply(v_opt[:,0].reshape((2,1)), t), x_curr)
+y_curr=np.add(np.multiply(v_opt[:,1].reshape((2,1)), t) , y_curr)
 
-plt.plot(x_curr[0],y_curr[0],'r*','MarkerSize',10)
-plt.plot(x_curr[1],y_curr[1],'o','MarkerSize',10)
-pt.display()
-
+'''lt.plot(x_curr[0],y_curr[0])
+plt.plot(x_curr[1],y_curr[1])
+plt.show()
+'''
 #************************** simulation starts from here ***********************
 
 inc = 1
+id_self = 1
 
-while(np.linalg.norm(error[0]> 0.1 ))&(np.linalg.norm(error[1]> 0.1 )):
-	error =[np.subtract(g[0], [x_curr[0],y_curr[0]]), np.subtract(g[1], [x_curr[1],y_curr[1]])]
+while(np.linalg.norm(error[0]> 0.1 )) and (np.linalg.norm(error[1]> 0.1 )):
+	error =[np.subtract(g[0], x_curr[0]+y_curr[0]), np.subtract(g[1], x_curr[1]+y_curr[1])]
 	
 	di=[np.subtract(error[0], error_pre[0]), np.subtract(error[1],error_pre[1])]
 	np.add(inti, error)
 
 	v_pref = [np.add(np.add(np.multiply(kp,error[0]), np.multiply(kd,di[0])), np.multiply(ki,inti[0])), np.add(np.add(np.multiply(kp,error[1]), np.multiply(kd,di[1])), np.multiply(ki,inti[1]))]
 
-	for l in range(2):
+	for l in range(BOTS):
 
-		if l == 0:
-			a=np.multiply((np.subtract(x_curr[1],x_curr[0])), (1/t))
-			b=np.multiply((np.subtract(y_curr[1],y_curr[0])), (1/t))
-			v_diff_opt=np.subtract(v_opt[0], v_opt[1])
-		else:
-			a=np.multiply((np.subtract(x_curr[0],x_curr[1])), (1/t))
-			b=np.multiply((np.subtract(y_curr[0],y_curr[1])), (1/t))
-			v_diff_opt=np.subtract(v_opt[1], v_opt[0])
+		if True:
+		#if l != id_self :
 
-	c=[a**2-r**2,-2*a*b,b**2-r**2]
+			if l == 0:
+				a=np.mulyiply(np.subtract(x_curr[1],x_curr[0]), (1/t))	
+				b=np.multiply((np.subtract(y_curr[1],y_curr[0])), (1/t))
+				v_diff_opt=np.subtract(v_opt[0], v_opt[1])
+			else:
+				a=np.multiply((np.subtract(x_curr[0],x_curr[1])), (1/t))
+				b=np.multiply((np.subtract(y_curr[0],y_curr[1])), (1/t))
+				v_diff_opt=np.subtract(v_opt[1], v_opt[0])
+
+	c=[a[0]**2-r**2,-2*a[0]*b[0],b[0]**2-r**2]
 	m=np.roots(c)
+	np.array(m, dtype=np.int64)
 
 	np.array(m, dtype=np.int64)
 
@@ -91,9 +100,11 @@ while(np.linalg.norm(error[0]> 0.1 ))&(np.linalg.norm(error[1]> 0.1 )):
 	x_cir = [0]*len(theta)
 	y_cir = [0]*len(theta)
 	for i in np.arange(100):
-		x_cir[i]=r*np.cos(theta[i])+a
-		y_cir[i]=r*np.sin(theta[i])+b
+		x_cir[i]=r*np.cos(theta[i])+a[0]
+		y_cir[i]=r*np.sin(theta[i])+b[0]
 
+	x_cir = np.array(x_cir)
+	y_cir = np.array(y_cir)
 
 
 	if a<0:
@@ -107,24 +118,26 @@ while(np.linalg.norm(error[0]> 0.1 ))&(np.linalg.norm(error[1]> 0.1 )):
 	y_lin=np.multiply(m[0], x_lin)
 	y_lin1=np.multiply(m[1], x_lin1)
 
-	v=[]
+	v_cir=[]
 	v1=[]
 	v2=[]
 	for i in np.arange(np.size(x_cir)):
-		v.append([x_cir[i], y_cir[i]])
+		v_cir.append([x_cir[i], y_cir[i]])
 		v1.append([x_lin[i], y_lin[i]])
 		v2.append([x_lin1[i], y_lin1[i]])
-
-	V = np.concatenate((v1, v), axis = 0)
+	v_cir=np.array(v_cir)
+	v1=np.array(v1)
+	v2=np.array(v2)
+	V = np.concatenate((v1, v_cir), axis = 0)
 	V = np.concatenate((V, v2), axis = 0)
 
 	d1=np.multiply( np.subtract(v_diff_opt[1], np.multiply(m[0], v_diff_opt[0])), np.subtract(v_diff_opt[1], np.multiply(m[1], v_diff_opt[0]) ))
 
 	dist=np.linalg.norm(v_diff_opt)
 
-	distance = [0]*np.size(v[i])
-	for i in np.arange(np.size(v[i])):
-		distance[i]=np.linalg.norm(v[i])
+	distance = [0]*np.size(v_cir[i])
+	for i in np.arange(np.size(v_cir[i])):
+		distance[i]=np.linalg.norm(v_cir[i])
 
 		min_distance_in=np.argmin(distance)
 		min_distance=distance[min_distance_in]
@@ -145,8 +158,8 @@ while(np.linalg.norm(error[0]> 0.1 ))&(np.linalg.norm(error[1]> 0.1 )):
 
 		if w == 0:
 
-			p = [0]*np.size(v[i])
-			for i in np.arange(np.size(v[i])):
+			p = [0]*np.size(v_cir[i])
+			for i in np.arange(np.size(v_cir[i])):
 				p[i]=np.linalg.norm(np.subtract( V[i], v_diff_opt))
 
 			min_dis=np.argmin(p);
@@ -157,45 +170,49 @@ while(np.linalg.norm(error[0]> 0.1 ))&(np.linalg.norm(error[1]> 0.1 )):
 
 			[x,y]=np.meshgrid(v_x,v_y)
 
-			A = []
-			A=A.append(x)
-			A=A.append(y)
+			A = np.array([x,y])
 
-			for i in np.arange(np.size(A,1)):
-				for j in np.arange(np.size(A,2)):
-					A[i,j,0]
-					a[0]=ans
-					A[i,j,1]
-					a[1]=ans
+			#A=x
+			#A=A.append(y)
+			a=[0,0]
+			inj = np.zeros((200,200))
+			for i in np.arange(200):
+				for j in np.arange(200):
+					a[0]=A[0,i,j]
+					a[1]=A[1,i,j]
 					if l==1:
-						inj[i,j]=np.dot((a-np.add(v_opt[0],np.multiply(1/2,u))),np.divide(u, norm(u)))>0
+						inj[i,j]=np.dot((a-np.add(v_opt[0],np.multiply(1/2,u))),np.divide(u, np.linalg.norm(u)))>0
 					else:
-						inj[i,j]=np.dot((a-np.add(v_opt[1],np.multiply(1/2,u))),np.divide(u, norm(u)))>0
+						inj[i,j]=np.dot((a-np.add(v_opt[1],np.multiply(1/2,u))),np.divide(u, np.linalg.norm(u)))>0
 					
 
-			k=1
-			for i in np.arange(np.size(inj,1)):
-				for j in np.arange(np.size(inj,2)):
+			k=0
+			x_fin = np.zeros(22425)
+			y_fin = np.zeros(22425)
+			for i in np.arange(200):
+				for j in np.arange(200):
 					if inj[i,j]!=0:		
-						x_fin[k]=A[i,j,0]
-						y_fin[k]=A[i,j,1]
+						x_fin[k]=A[0,i,j]
+						y_fin[k]=A[1,i,j]
 						k=k+1;
+			
 
 
 			v=[np.transpose(x_fin),np.transpose(y_fin)]
-
-			for i in np.arange(np.size(v,1)):
+			v=np.array(v)
+			pi = np.zeros(22425)
+			for i in np.arange(22425):
 
 				if l==1 :
-					pi[i]=np.linalg.norm(v[i]-v_pref[0])
+					pi[i]=np.linalg.norm(v[:,i]-v_pref[0])
 				else :
-						pi[i]=np.linalg.norm(v[i]-v_pref[1])
-
+						pi[i]=np.linalg.norm(v[:,i]-v_pref[1])
+			va_new = np.zeros((2,2))
 			index_new=np.argmin(pi)
 			if l == 1:
-				va_new[0]=v[index_new]
+				va_new[0]=v[:,index_new]
 			else:
-				va_new[1]=v[index_new]
+				va_new[1]=v[:,index_new]
 
 
 		else:
@@ -207,11 +224,13 @@ while(np.linalg.norm(error[0]> 0.1 ))&(np.linalg.norm(error[1]> 0.1 )):
 
 	v_opt=va_new
 
-	x_curr=np.add(np.multiply(v_opt[:,0],t), x_curr)
-	y_curr=np.add(np.multiply(v_opt[:,1],t), y_curr)
+	x_curr=np.add(np.multiply(v_opt[:,0].reshape((2,1)),t), x_curr)
+	y_curr=np.add(np.multiply(v_opt[:,1].reshape((2,1)),t), y_curr)
 
-	plt.plot(x_curr[0],y_curr[1],'r*','MarkerSize',10)
-	plt.plot(x_curr[0],y_curr[1],'o','MarkerSize',10)
+	plt.plot(x_curr[0],y_curr[0], hold=True)
+	plt.plot(x_curr[1],y_curr[1], hold=True)
+	
 
 	error_pre=error
 	inc += 1
+plt.show()
