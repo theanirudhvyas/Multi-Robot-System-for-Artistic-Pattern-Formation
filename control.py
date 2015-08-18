@@ -32,7 +32,9 @@ plt.show()
 #**************************8**************************************8
 
 di=[np.subtract(error[0], error_pre[0]), np.subtract(error[1],error_pre[1])]
-np.add(inti, error)
+inti[0] = np.add(error[0], inti[0])
+inti[1] = np.add(error[1], inti[1])
+
 
 v_opt= [np.add(np.add(np.multiply(kp,error[0]), np.multiply(kd,di[0])), np.multiply(ki,inti[0])), np.add(np.add(np.multiply(kp,error[1]), np.multiply(kd,di[1])), np.multiply(ki,inti[1]))]
 v_opt = np.array(v_opt)
@@ -49,12 +51,17 @@ plt.show()
 
 inc = 1
 id_self = 1
-
-while(np.linalg.norm(error[0]> 0.1 )) and (np.linalg.norm(error[1]> 0.1 )):
+limit = 18
+while limit :
+#while((np.linalg.norm(error[0])> 0.1 ) and (np.linalg.norm(error[1])> 0.1 )):
+	limit -= 1
+	print np.linalg.norm(error[0])
 	error =[np.subtract(g[0], x_curr[0]+y_curr[0]), np.subtract(g[1], x_curr[1]+y_curr[1])]
 	
 	di=[np.subtract(error[0], error_pre[0]), np.subtract(error[1],error_pre[1])]
-	np.add(inti, error)
+	inti[0] = np.add(error[0], inti[0])
+	inti[1] = np.add(error[1], inti[1])
+
 
 	v_pref = [np.add(np.add(np.multiply(kp,error[0]), np.multiply(kd,di[0])), np.multiply(ki,inti[0])), np.add(np.add(np.multiply(kp,error[1]), np.multiply(kd,di[1])), np.multiply(ki,inti[1]))]
 
@@ -64,7 +71,7 @@ while(np.linalg.norm(error[0]> 0.1 )) and (np.linalg.norm(error[1]> 0.1 )):
 		#if l != id_self :
 
 			if l == 0:
-				a=np.mulyiply(np.subtract(x_curr[1],x_curr[0]), (1/t))	
+				a=np.multiply(np.subtract(x_curr[1],x_curr[0]), (1/t))	
 				b=np.multiply((np.subtract(y_curr[1],y_curr[0])), (1/t))
 				v_diff_opt=np.subtract(v_opt[0], v_opt[1])
 			else:
@@ -74,14 +81,14 @@ while(np.linalg.norm(error[0]> 0.1 )) and (np.linalg.norm(error[1]> 0.1 )):
 
 	c=[a[0]**2-r**2,-2*a[0]*b[0],b[0]**2-r**2]
 	m=np.roots(c)
-	np.array(m, dtype=np.int64)
+	m=np.array(m, dtype=np.float64)
 
 	np.array(m, dtype=np.int64)
 
 	x_tan = [0]* len(m)
-	np.array(x_tan, dtype=np.int64)	
+	x_tan = np.array(x_tan, dtype=np.float64)	
 	y_tan= [0]* len(m)
-	np.array(y_tan, dtype=np.int64)
+	y_tan = np.array(y_tan, dtype=np.float64)
 
 	for i in np.arange(len(m)):
 		x_tan[i] = (a+m[i]*b)/(1+m[i]**2)
@@ -90,11 +97,11 @@ while(np.linalg.norm(error[0]> 0.1 )) and (np.linalg.norm(error[1]> 0.1 )):
 	th = [0]*len(m)
 	if a>0:
 		for i in np.arange(len(m)):
-			th[i]=astan(np.arctan2((y_tan[i]-b),(x_tan[i]-a)))
+			th[i]=astan.astan(np.arctan2((y_tan[i]-b),(x_tan[i]-a)))
 	else:
 		for i in np.arange(len(m)):
 			th[i]=np.arctan2((y_tan[i]-b),(x_tan[i]-a))
-
+	th = np.array(th)
 	theta=np.linspace(th[0],th[1],100)
 
 	x_cir = [0]*len(theta)
@@ -227,10 +234,11 @@ while(np.linalg.norm(error[0]> 0.1 )) and (np.linalg.norm(error[1]> 0.1 )):
 	x_curr=np.add(np.multiply(v_opt[:,0].reshape((2,1)),t), x_curr)
 	y_curr=np.add(np.multiply(v_opt[:,1].reshape((2,1)),t), y_curr)
 
+
 	plt.plot(x_curr[0],y_curr[0], hold=True)
 	plt.plot(x_curr[1],y_curr[1], hold=True)
 	
-
+	print v
 	error_pre=error
 	inc += 1
 plt.show()
